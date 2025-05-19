@@ -1,0 +1,46 @@
+# Configuration for Intelligent Semantic Structuring System
+
+# General settings
+general:
+  debug: false
+  log_level: INFO
+
+# Input settings
+input:
+  text_extensions: [".txt"]
+  image_extensions: [".jpg", ".jpeg", ".png"]
+
+# Text pipeline settings
+text_pipeline:
+  language_detection:
+    enabled: true
+  preprocessing:
+    remove_stopwords: true
+    remove_punctuation: true
+    lemmatize: true
+    lowercase: true
+  enrichment:
+    perform_ner: true
+    perform_sentiment: true
+    perform_topic_modeling: false
+
+# Image pipeline settings
+image_pipeline:
+  preprocessing:
+    resize:
+      enabled: true
+      width: 224
+      height: 224
+    normalize: true
+  feature_extraction:
+    model: "resnet50"
+
+# Storage settings
+storage:
+  graph_db:
+    type: "neo4j"  # or any other graph database
+    host: "localhost"
+    port: 7687
+    user: "neo4j"
+    password: "password"
+    database: "semantic_structure"
