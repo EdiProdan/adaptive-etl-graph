@@ -1,46 +1,47 @@
-# Configuration for Intelligent Semantic Structuring System
+# config.yaml
+# Wikipedia Data Collection Configuration
 
-# General settings
-general:
-  debug: false
-  log_level: INFO
+data_collection:
+  # Number of pages to collect for base graph
+  target_pages: 10000
 
-# Input settings
-input:
-  text_extensions: [".txt"]
-  image_extensions: [".jpg", ".jpeg", ".png"]
+  # Output paths
+  output_dir: "data/input/pages"
+  base_pages_file: "base_pages.json"
 
-# Text pipeline settings
-text_pipeline:
-  language_detection:
-    enabled: true
-  preprocessing:
-    remove_stopwords: true
-    remove_punctuation: true
-    lemmatize: true
-    lowercase: true
-  enrichment:
-    perform_ner: true
-    perform_sentiment: true
-    perform_topic_modeling: false
+  # API settings
+  rate_limit_delay: 0.1  # seconds between requests
+  batch_save_interval: 100  # save progress every N pages
 
-# Image pipeline settings
-image_pipeline:
-  preprocessing:
-    resize:
-      enabled: true
-      width: 224
-      height: 224
-    normalize: true
-  feature_extraction:
-    model: "resnet50"
+  # Page filtering
+  exclude_patterns:
+    - "Main_Page"
+    - "Special:"
+    - "File:"
+    - "Category:"
+    - "Template:"
+    - "Wikipedia:"
+    - "Help:"
+    - "Portal:"
+    - "List_of"
+    - "disambiguation"
 
-# Storage settings
-storage:
-  graph_db:
-    type: "neo4j"  # or any other graph database
-    host: "localhost"
-    port: 7687
-    user: "neo4j"
-    password: "password"
-    database: "semantic_structure"
+logging:
+  level: "INFO"
+  log_dir: "data/logs"
+  log_file: "wikipedia_collection.log"
+
+# Future phases (for reference)
+phases:
+  phase1_extraction:
+    wikipedia_api: true
+    image_ocr: false  # Will add later
+
+  phase2_symbolization:
+    sbert_model: "all-MiniLM-L6-v2"
+    similarity_threshold: 0.7
+    batch_size: 100
+
+  phase3_construction:
+    neo4j_uri: "bolt://localhost:7687"
+    batch_load_size: 1000
