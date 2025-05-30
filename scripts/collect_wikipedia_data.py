@@ -29,7 +29,7 @@ def setup_logging():
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler('data/logs/wikipedia_collection.log'),
+            logging.FileHandler('data/logs/wikipedia_collection_batch.log'),
             logging.StreamHandler()
         ]
     )
@@ -39,7 +39,7 @@ def main():
     parser = argparse.ArgumentParser(description='Collect Wikipedia data for thesis project')
     parser.add_argument('--pages', type=int, default=10000,
                         help='Number of pages to collect (default: 10000)')
-    parser.add_argument('--output', type=str, default='data/input/pages/base_pages.json',
+    parser.add_argument('--output', type=str, default='data/input/pages/base_pages_batch.json',
                         help='Output file path')
     parser.add_argument('--test', action='store_true',
                         help='Run in test mode (collect only 50 pages)')
@@ -113,7 +113,7 @@ def main():
             'sample_titles': popular_titles[:10] if popular_titles else []
         }
 
-        metadata_file = str(Path(args.output).with_suffix('.metadata.json'))
+        metadata_file = str(Path(args.output).with_suffix('.metadata_batch.json'))
         with open(metadata_file, 'w') as f:
             json.dump(metadata, f, indent=2)
 

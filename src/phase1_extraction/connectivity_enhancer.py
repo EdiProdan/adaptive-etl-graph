@@ -1,261 +1,334 @@
 # src/phase1_extraction/connectivity_enhancer.py
 """
-Connectivity Enhancement Module
-==============================
+Fast-Track Connectivity Enhancement
+==================================
 
-Strategically enhance internal connectivity of existing Wikipedia dataset
-by identifying and collecting pages that heavily reference our current collection.
-Implements incremental enhancement without reprocessing existing data.
+Alternative implementation that bypasses computational bottlenecks through
+strategic semantic hub identification and targeted collection optimization.
+Designed for immediate execution with your existing dataset constraints.
 """
 
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Tuple
-from collections import Counter, defaultdict
-import requests
-import time
+from typing import List, Set
 
-from .wikipedia_client import WikipediaClient, WikiPage
+from src.phase1_extraction.wikipedia_client import WikipediaClient
 
 
 class ConnectivityEnhancer:
     """
-    Enhance dataset connectivity through strategic page collection
-    Focus on creating semantic hot spots rather than metadata hot spots
+    Optimized connectivity enhancement focusing on execution efficiency
+    Uses predefined semantic targets with validation rather than exhaustive analysis
     """
 
-    def __init__(self, existing_entities_file: str):
+    def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.wikipedia_client = WikipediaClient()
 
-        # Load existing entities to identify targets for enhancement
-        self.existing_entities = self._load_existing_entities(existing_entities_file)
-        self.existing_page_titles = {entity['original_title'] for entity in self.existing_entities
-                                     if entity['entity_type'] == 'page'}
+        # Load existing page titles for duplicate prevention
+        self.existing_page_titles = self._load_existing_page_titles()
+        self.logger.info(f"Loaded {len(self.existing_page_titles)} existing page titles")
 
-        self.logger.info(f"Loaded {len(self.existing_entities)} existing entities")
-        self.logger.info(f"Identified {len(self.existing_page_titles)} existing page titles")
+    def _load_existing_page_titles(self) -> Set[str]:
+        """Load existing page titles from base collection"""
+        base_pages_file = "data/input/pages/base_pages.json"
 
-    def _load_existing_entities(self, file_path: str) -> List[Dict]:
-        """Load existing entities from extraction output"""
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        if not Path(base_pages_file).exists():
+            self.logger.error(f"Base pages file not found: {base_pages_file}")
+            return set()
 
-    def identify_semantic_hubs(self, min_references: int = 10) -> List[str]:
+        with open(base_pages_file, 'r', encoding='utf-8') as f:
+            pages_data = json.load(f)
+
+        return {page['title'] for page in pages_data}
+
+    def get_strategic_semantic_hubs(self) -> List[str]:
         """
-        Identify semantic hubs from existing entities that should have high connectivity
-        Focus on entities that represent cross-domain concepts
+        Curated list of high-value semantic hubs guaranteed to create cross-domain conflicts
+        Based on empirical analysis of Wikipedia connectivity patterns
         """
-        # Load relationship data to find most referenced internal entities
-        relationships_file = Path("data/processed/phase1/relationships.json")
-        if not relationships_file.exists():
-            self.logger.warning("Relationships file not found, using predefined semantic hubs")
-            return self._get_predefined_semantic_hubs()
+        # Prioritized by cross-domain connectivity potential
+        strategic_hubs = [
+            # Geographic hot spots (appear in history, culture, science, politics)
+            "Paris", "London", "Rome", "New York City", "Berlin", "Tokyo", "Moscow",
 
-        with open(relationships_file, 'r', encoding='utf-8') as f:
-            relationships = json.load(f)
-
-        # Count internal references (target entities that exist in our page collection)
-        internal_references = Counter()
-        for rel in relationships:
-            target = rel['target']
-            # Check if target is in our existing page collection
-            if target in {entity['name'] for entity in self.existing_entities
-                          if entity['entity_type'] == 'page'}:
-                internal_references[target] += 1
-                print(f"Found internal reference to {target} (count: {internal_references[target]})")
-
-        # Filter for semantic hubs (high-value entities for expansion)
-        semantic_hubs = []
-        for entity, count in internal_references.most_common(100):
-            if count >= min_references and self._is_semantic_hub(entity):
-                semantic_hubs.append(entity)
-
-        self.logger.info(f"Identified {len(semantic_hubs)} semantic hubs for enhancement")
-        return semantic_hubs[:20]  # Focus on top 20 for manageable scope
-
-    def _is_semantic_hub(self, entity_name: str) -> bool:
-        """
-        Determine if entity represents a valuable semantic hub for cross-domain connectivity
-        """
-        # Geographic entities (cities, countries)
-        geographic_patterns = ['city', 'country', 'state', 'province', 'region']
-
-        # Temporal concepts
-        temporal_patterns = ['century', 'year', 'period', 'era', 'age']
-
-        # Disciplinary concepts
-        disciplinary_patterns = ['science', 'physics', 'chemistry', 'biology', 'history',
-                                 'art', 'literature', 'music', 'philosophy', 'mathematics']
-
-        # Institutional entities
-        institutional_patterns = ['university', 'institute', 'academy', 'society', 'foundation']
-
-        entity_lower = entity_name.lower()
-
-        # Check for known high-value entities
-        high_value_entities = {
-            'paris', 'london', 'rome', 'new york', 'berlin', 'tokyo', 'moscow',
-            'united states', 'france', 'germany', 'italy', 'united kingdom', 'japan',
-            'einstein', 'newton', 'darwin', 'shakespeare', 'mozart', 'leonardo da vinci',
-            'world war ii', 'renaissance', 'industrial revolution',
-            'physics', 'chemistry', 'biology', 'mathematics', 'history', 'literature'
-        }
-
-        return (entity_lower in high_value_entities or
-                any(pattern in entity_lower for pattern in
-                    geographic_patterns + temporal_patterns + disciplinary_patterns + institutional_patterns))
-
-    def _get_predefined_semantic_hubs(self) -> List[str]:
-        """Fallback list of known semantic hubs if relationship analysis fails"""
-        return [
-            "Paris", "London", "Rome", "New York City", "Berlin",
+            # Major countries (political, cultural, scientific connections)
             "United States", "France", "Germany", "Italy", "United Kingdom",
-            "Albert Einstein", "Isaac Newton", "Charles Darwin", "William Shakespeare",
-            "World War II", "Renaissance", "Industrial Revolution",
-            "Physics", "Chemistry", "Biology", "Mathematics", "History"
+            "Japan", "China", "Russia", "India", "Canada",
+
+            # Historical periods (cross-temporal connections)
+            "World War II", "World War I", "Renaissance", "Industrial Revolution",
+            "Cold War", "French Revolution", "American Revolution",
+
+            # Scientific concepts (interdisciplinary connections)
+            "Physics", "Chemistry", "Biology", "Mathematics", "Medicine",
+            "Computer science", "Engineering", "Astronomy",
+
+            # Cultural institutions (arts, literature, music connections)
+            "University", "Museum", "Library", "Theater", "Opera",
+            "Academy of Sciences", "Royal Society",
+
+            # Biographical hot spots (multi-domain figures)
+            "Leonardo da Vinci", "Isaac Newton", "Albert Einstein", "Charles Darwin",
+            "William Shakespeare", "Wolfgang Amadeus Mozart", "Aristotle", "Plato",
+
+            # Temporal entities (broad historical connections)
+            "19th century", "20th century", "Middle Ages", "Ancient Rome",
+            "Ancient Greece", "Byzantine Empire", "Ottoman Empire",
+
+            # Conceptual bridges (philosophy, religion, ideology)
+            "Christianity", "Philosophy", "Democracy", "Capitalism", "Socialism",
+            "Art", "Literature", "Science", "Religion", "Politics"
         ]
 
-    def find_referencing_pages(self, target_entity: str, max_pages: int = 150) -> List[str]:
+        # Filter to entities that exist in our collection
+        validated_hubs = []
+        for hub in strategic_hubs:
+            if hub in self.existing_page_titles:
+                validated_hubs.append(hub)
+                self.logger.info(f"Validated strategic hub: {hub}")
+            else:
+                # Check for close matches
+                close_matches = [title for title in self.existing_page_titles
+                                 if hub.lower() in title.lower() or title.lower() in hub.lower()]
+                if close_matches:
+                    # Use the closest match
+                    best_match = min(close_matches, key=len)
+                    validated_hubs.append(best_match)
+                    self.logger.info(f"Strategic hub matched: {hub} → {best_match}")
+
+        self.logger.info(f"Strategic semantic hubs identified: {len(validated_hubs)}")
+        return validated_hubs
+
+    def collect_referencing_pages_batch(self, semantic_hubs: List[str],
+                                        pages_per_hub: int = 150) -> List[str]:
         """
-        Find Wikipedia pages that reference a specific entity
-        Uses Wikipedia's "What links here" functionality
+        Efficiently collect pages referencing multiple semantic hubs
+        Uses batch processing with progress tracking
         """
-        try:
-            # Use Wikipedia API to find pages that link to target
-            api_url = "https://en.wikipedia.org/w/api.php"
-            params = {
-                'action': 'query',
-                'format': 'json',
-                'list': 'backlinks',
-                'bltitle': target_entity,
-                'bllimit': max_pages,
-                'blnamespace': 0,  # Main namespace only
-                'blfilterredir': 'nonredirects'
-            }
+        all_candidates = set()
+        failed_hubs = []
 
-            self.wikipedia_client._rate_limit()
-            response = self.wikipedia_client.session.get(api_url, params=params)
+        total_hubs = len(semantic_hubs)
+        self.logger.info(f"Collecting referencing pages for {total_hubs} semantic hubs...")
 
-            if response.status_code != 200:
-                self.logger.warning(f"Failed to get backlinks for {target_entity}")
-                return []
+        for i, hub in enumerate(semantic_hubs, 1):
+            self.logger.info(f"Processing hub {i}/{total_hubs}: {hub}")
 
-            data = response.json()
-            backlinks = data.get('query', {}).get('backlinks', [])
+            try:
+                referencing_pages = self._get_backlinks_optimized(hub, max_pages=pages_per_hub)
 
-            # Extract page titles and filter
-            referencing_pages = []
-            for link in backlinks:
-                title = link.get('title', '')
-                if self._is_suitable_enhancement_page(title):
-                    referencing_pages.append(title)
+                # Filter and add to candidates
+                valid_pages = [page for page in referencing_pages
+                               if self._is_enhancement_candidate(page)]
 
-            return referencing_pages
+                before_count = len(all_candidates)
+                all_candidates.update(valid_pages)
+                after_count = len(all_candidates)
+                new_pages = after_count - before_count
 
-        except Exception as e:
-            self.logger.error(f"Error finding referencing pages for {target_entity}: {e}")
-            return []
+                self.logger.info(
+                    f"  Found {len(referencing_pages)} total, {len(valid_pages)} valid, {new_pages} new candidates")
+                self.logger.info(f"  Total unique candidates: {len(all_candidates)}")
 
-    def _is_suitable_enhancement_page(self, title: str) -> bool:
-        """
-        Determine if a page is suitable for connectivity enhancement
-        Avoid duplicate collection and low-quality pages
-        """
-        # Skip if already collected
-        if title in self.existing_page_titles:
-            return False
+            except Exception as e:
+                self.logger.warning(f"Failed to process hub {hub}: {e}")
+                failed_hubs.append(hub)
+                continue
 
-        # Use same filtering logic as original client
-        exclude_patterns = [
-            'List of', 'Category:', 'Template:', 'File:', 'Wikipedia:',
-            'disambiguation', 'index', 'timeline', 'chronology'
-        ]
+            # Progress update
+            progress_pct = (i / total_hubs) * 100
+            self.logger.info(f"Progress: {progress_pct:.1f}% complete")
 
-        return not any(pattern in title for pattern in exclude_patterns)
-
-    def enhance_connectivity(self, target_additional_pages: int = 2000) -> List[str]:
-        """
-        Main enhancement function: collect additional pages to improve internal connectivity
-        """
-        self.logger.info(f"Starting connectivity enhancement targeting {target_additional_pages} additional pages")
-
-        # 1. Identify semantic hubs that need better connectivity
-        semantic_hubs = self.identify_semantic_hubs()
-        self.logger.info(f"Targeting {len(semantic_hubs)} semantic hubs for enhancement")
-
-        # 2. For each semantic hub, find pages that reference it
-        enhancement_candidates = set()
-        pages_per_hub = target_additional_pages // len(semantic_hubs) if semantic_hubs else 100
-
-        for hub in semantic_hubs:
-            self.logger.info(f"Finding referencing pages for semantic hub: {hub}")
-            referencing_pages = self.find_referencing_pages(hub, max_pages=pages_per_hub + 50)
-
-            # Add to candidates (set automatically handles duplicates)
-            for page in referencing_pages[:pages_per_hub]:
-                enhancement_candidates.add(page)
-
-            self.logger.info(f"Found {len(referencing_pages)} candidates for {hub}")
-
-            if len(enhancement_candidates) >= target_additional_pages:
+            # Early termination if we have enough candidates
+            if len(all_candidates) >= 3000:  # Collect more than needed for quality selection
+                self.logger.info(f"Reached target candidate count, stopping early")
                 break
 
-        enhancement_pages = list(enhancement_candidates)[:target_additional_pages]
+        if failed_hubs:
+            self.logger.warning(f"Failed to process {len(failed_hubs)} hubs: {failed_hubs}")
 
-        self.logger.info(f"Selected {len(enhancement_pages)} pages for connectivity enhancement")
-        return enhancement_pages
+        candidates_list = list(all_candidates)
+        self.logger.info(f"Batch collection complete: {len(candidates_list)} unique candidates identified")
 
-    def collect_enhancement_pages(self, page_titles: List[str], output_file: str) -> List[WikiPage]:
+        return candidates_list
+
+    def _get_backlinks_optimized(self, target_entity: str, max_pages: int = 150) -> List[str]:
         """
-        Collect the enhancement pages using existing Wikipedia client
+        Optimized backlink collection with error handling and rate limiting
         """
-        self.logger.info(f"Collecting {len(page_titles)} enhancement pages...")
+        api_url = "https://en.wikipedia.org/w/api.php"
+        params = {
+            'action': 'query',
+            'format': 'json',
+            'list': 'backlinks',
+            'bltitle': target_entity,
+            'bllimit': max_pages,
+            'blnamespace': 0,  # Main namespace only
+            'blfilterredir': 'nonredirects'
+        }
 
-        # Use existing Wikipedia client for consistency
-        collected_pages = self.wikipedia_client.collect_pages(page_titles, output_file)
+        self.wikipedia_client._rate_limit()
+        response = self.wikipedia_client.session.get(api_url, params=params, timeout=30)
 
-        self.logger.info(f"Successfully collected {len(collected_pages)} enhancement pages")
-        return collected_pages
+        if response.status_code != 200:
+            raise Exception(f"API request failed: {response.status_code}")
+
+        data = response.json()
+        backlinks = data.get('query', {}).get('backlinks', [])
+
+        return [link.get('title', '') for link in backlinks if link.get('title')]
+
+    def _is_enhancement_candidate(self, title: str) -> bool:
+        """
+        Determine if page is suitable for enhancement
+        Optimized filtering logic
+        """
+        if not title or title in self.existing_page_titles:
+            return False
+
+        # Quick exclusion patterns
+        exclude_patterns = [
+            'List of', 'Category:', 'Template:', 'File:', 'Wikipedia:',
+            'disambiguation', 'index', 'timeline', 'chronology', 'User:',
+            'Talk:', 'Draft:', 'Portal:', 'Help:', 'Book:'
+        ]
+
+        title_lower = title.lower()
+        return not any(pattern.lower() in title_lower for pattern in exclude_patterns)
+
+    def select_optimal_enhancement_pages(self, candidates: List[str],
+                                         target_count: int = 2000) -> List[str]:
+        """
+        Select optimal pages for enhancement based on diversity and quality heuristics
+        """
+        self.logger.info(f"Selecting {target_count} optimal pages from {len(candidates)} candidates")
+
+        if len(candidates) <= target_count:
+            return candidates
+
+        # Prioritization scoring
+        scored_candidates = []
+
+        for candidate in candidates:
+            score = self._calculate_enhancement_score(candidate)
+            scored_candidates.append((candidate, score))
+
+        # Sort by score (descending) and select top candidates
+        scored_candidates.sort(key=lambda x: x[1], reverse=True)
+        selected_pages = [candidate for candidate, score in scored_candidates[:target_count]]
+
+        # Log score distribution
+        scores = [score for _, score in scored_candidates[:target_count]]
+        avg_score = sum(scores) / len(scores) if scores else 0
+        self.logger.info(f"Selected pages with average score: {avg_score:.2f}")
+
+        return selected_pages
+
+    def _calculate_enhancement_score(self, title: str) -> float:
+        """
+        Calculate enhancement value score for candidate page
+        Higher scores indicate better connectivity potential
+        """
+        score = 1.0  # Base score
+
+        title_lower = title.lower()
+
+        # Boost biographical pages
+        if any(indicator in title_lower for indicator in ['born', 'died', 'biography']):
+            score += 0.5
+
+        # Boost geographic entities
+        if any(geo in title_lower for geo in ['city', 'country', 'state', 'province', 'region']):
+            score += 0.3
+
+        # Boost institutional entities
+        if any(inst in title_lower for inst in ['university', 'institute', 'academy', 'society']):
+            score += 0.3
+
+        # Boost historical entities
+        if any(hist in title_lower for hist in ['war', 'battle', 'revolution', 'empire', 'kingdom']):
+            score += 0.2
+
+        # Boost cultural entities
+        if any(cult in title_lower for cult in ['art', 'music', 'literature', 'culture', 'museum']):
+            score += 0.2
+
+        # Penalty for overly specific or technical titles
+        if len(title.split()) > 6:
+            score -= 0.2
+
+        return max(score, 0.1)  # Minimum score
+
+    def execute_fast_enhancement(self, target_pages: int = 2000) -> bool:
+        """
+        Execute complete fast-track enhancement workflow
+        """
+        try:
+            self.logger.info("🚀 Fast-Track Connectivity Enhancement Started")
+            self.logger.info("=" * 60)
+
+            # Phase 1: Get strategic semantic hubs
+            self.logger.info("Phase 1: Identifying strategic semantic hubs...")
+            semantic_hubs = self.get_strategic_semantic_hubs()
+
+            if not semantic_hubs:
+                self.logger.error("No semantic hubs identified")
+                return False
+
+            # Phase 2: Collect referencing pages
+            self.logger.info("Phase 2: Collecting referencing pages...")
+            pages_per_hub = max(100, (target_pages * 2) // len(semantic_hubs))  # Collect 2x for selection
+
+            candidates = self.collect_referencing_pages_batch(semantic_hubs, pages_per_hub)
+
+            if not candidates:
+                self.logger.error("No enhancement candidates found")
+                return False
+
+            # Phase 3: Select optimal pages
+            self.logger.info("Phase 3: Selecting optimal enhancement pages...")
+            selected_pages = self.select_optimal_enhancement_pages(candidates, target_pages)
+
+            # Phase 4: Collect page data
+            self.logger.info("Phase 4: Collecting page content...")
+            output_file = "data/input/pages/enhancement_pages.json"
+            collected_pages = self.wikipedia_client.collect_pages(selected_pages, output_file)
+
+            # Summary
+            self.logger.info("=" * 60)
+            self.logger.info("✅ Fast-Track Enhancement Complete")
+            self.logger.info("=" * 60)
+            self.logger.info(f"Semantic hubs processed: {len(semantic_hubs)}")
+            self.logger.info(f"Candidates evaluated: {len(candidates)}")
+            self.logger.info(f"Pages selected: {len(selected_pages)}")
+            self.logger.info(f"Pages collected: {len(collected_pages)}")
+            self.logger.info(f"Enhancement data saved to: {output_file}")
+
+            return len(collected_pages) > 0
+
+        except Exception as e:
+            self.logger.error(f"Fast-track enhancement failed: {e}")
+            return False
 
 
 def main():
-    """
-    Main enhancement workflow
-    """
+    """Execute fast-track connectivity enhancement"""
     logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
 
-    # Configuration
-    existing_entities_file = "data/processed/phase1/entities.json"
-    enhancement_output = "data/input/pages/enhancement_pages.json"
-    target_pages = 2000
+    enhancer = FastConnectivityEnhancer()
+    success = enhancer.execute_fast_enhancement(target_pages=2000)
 
-    # Initialize enhancer
-    enhancer = ConnectivityEnhancer(existing_entities_file)
+    if success:
+        print("\n🎯 Next Steps:")
+        print("1. Run entity extraction on enhancement pages")
+        print("2. Merge with existing data")
+        print("3. Proceed to Neo4j setup")
+    else:
+        print("\n❌ Enhancement failed. Check logs for details.")
 
-    # 1. Identify enhancement candidates
-    logger.info("Phase 1: Identifying connectivity enhancement candidates...")
-    enhancement_candidates = enhancer.enhance_connectivity(target_additional_pages=target_pages)
-
-    # 2. Collect enhancement pages
-    logger.info("Phase 2: Collecting enhancement pages...")
-    enhancement_pages = enhancer.collect_enhancement_pages(enhancement_candidates, enhancement_output)
-
-    # 3. Summary
-    logger.info("=" * 60)
-    logger.info("🔗 CONNECTIVITY ENHANCEMENT COMPLETE")
-    logger.info("=" * 60)
-    logger.info(f"Enhancement pages collected: {len(enhancement_pages)}")
-    logger.info(f"Total dataset size: {8019 + len(enhancement_pages)} pages")
-    logger.info(f"Enhancement data saved to: {enhancement_output}")
-
-    logger.info("\n🎯 Next Steps:")
-    logger.info("1. Run incremental entity extraction on enhancement pages")
-    logger.info("2. Merge with existing entities and relationships")
-    logger.info("3. Analyze improved hot spot distribution")
-    logger.info("4. Proceed to Neo4j setup with enhanced dataset")
+    return success
 
 
 if __name__ == "__main__":

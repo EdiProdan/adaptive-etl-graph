@@ -63,23 +63,16 @@ class WikipediaClient:
 
         collected_pages = []
 
-        # 1. Start with curated stable pages (guaranteed quality)
-        stable_pages = self._get_stable_educational_pages(limit // 3)
-        collected_pages.extend(stable_pages)
-        self.logger.info(f"Added {len(stable_pages)} stable educational pages")
+
 
         # 2. Add popular pages from multiple time periods for stability
         try:
-            popular_pages = self._get_popular_from_multiple_periods(limit - len(collected_pages))
+            popular_pages = self._get_popular_from_multiple_periods(limit)
             collected_pages.extend(popular_pages)
             self.logger.info(f"Added {len(popular_pages)} popular pages")
         except Exception as e:
             self.logger.warning(f"Failed to get popular pages: {e}")
             # Fill remaining with more stable pages
-            remaining = limit - len(collected_pages)
-            if remaining > 0:
-                extra_stable = self._get_stable_educational_pages(remaining, offset=len(stable_pages))
-                collected_pages.extend(extra_stable)
 
         # Remove duplicates while preserving order
         seen = set()
@@ -97,10 +90,7 @@ class WikipediaClient:
         all_popular = []
 
         # Try different months to get stable popular content
-        months = ['2023/01', '2023/02', '2023/03', '2023/04', '2023/05', '2023/06',
-                    '2023/07', '2023/08', '2023/09', '2023/10', '2023/11', '2023/12',
-            '2024/01', '2024/02', '2024/03', '2024/04', '2024/05', '2024/06',
-                  '2024/07', '2024/08', '2024/09', '2024/10', '2024/11', '2024/12']
+        months = ['2025/01', '2025/02', '2025/03', '2025/04']
 
         for month in months:
             try:

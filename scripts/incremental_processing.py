@@ -1,4 +1,4 @@
-# scripts/extract_enhancement_entities.py
+# scripts/incremental_processing.py
 """
 Incremental Entity Extraction for Enhancement Pages
 ==================================================
@@ -12,7 +12,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 # Add src to path
 project_root = Path(__file__).parent.parent
@@ -50,7 +50,7 @@ class IncrementalEntityExtractor:
         if not input_path.exists():
             self.logger.error(f"Enhancement pages not found: {input_path}")
             self.logger.info(
-                "Run connectivity enhancement first: python src/phase1_extraction/fast_connectivity_enhancer.py")
+                "Run connectivity enhancement first: python src/phase1_extraction/connectivity_enhancer.py")
             return False
 
         # Load and validate data structure
