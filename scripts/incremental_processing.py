@@ -21,7 +21,7 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(src_path))
 
 
-from src.phase1_extraction.entity_extractor import EntityExtractor
+from src.entity_extraction.entity_extractor import EntityExtractor
 
 
 class IncrementalEntityExtractor:
@@ -50,7 +50,7 @@ class IncrementalEntityExtractor:
         if not input_path.exists():
             self.logger.error(f"Enhancement pages not found: {input_path}")
             self.logger.info(
-                "Run connectivity enhancement first: python src/phase1_extraction/connectivity_enhancer.py")
+                "Run connectivity enhancement first: python src/entity_extraction/connectivity_enhancer.py")
             return False
 
         # Load and validate data structure

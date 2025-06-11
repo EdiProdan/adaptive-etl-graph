@@ -20,7 +20,7 @@ src_path = project_root / "src"
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(src_path))
 
-from src.phase1_extraction.wikipedia_client import WikipediaClient
+from src.entity_extraction.wikipedia_client import WikipediaClient
 
 
 def setup_logging():

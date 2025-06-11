@@ -174,4 +174,10 @@ cython_debug/
 .pypirc
 
 
-data/
+*.json
+*.txt
+*.temp
+
+neo4j_data.tar.gz
+
+neo4j_data copy.tar.gz

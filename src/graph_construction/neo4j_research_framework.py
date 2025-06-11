@@ -1,4 +1,4 @@
-# src/phase3_construction/neo4j_research_framework.py
+# src/graph_construction/neo4j_research_framework.py
 """
 Neo4j Implementation Framework for Adaptive Batching Algorithm Research
 =====================================================================

@@ -1,4 +1,4 @@
-from src.phase1_extraction import WikipediaClient
+from src.entity_extraction import WikipediaClient
 
 
 if __name__ == "__main__":

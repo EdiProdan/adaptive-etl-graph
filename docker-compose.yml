@@ -3,12 +3,17 @@ version: '3.8'
 services:
   neo4j:
     image: neo4j:5.15-community
-    container_name: thesis_neo4j
+    container_name: thesis_neo4j_test
     ports:
       - "7474:7474"
       - "7687:7687"
     environment:
       - NEO4J_AUTH=neo4j/research123
+
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*
 
       # Memory Configuration
       - NEO4J_dbms_memory_heap_initial__size=1G
@@ -16,7 +21,7 @@ services:
       - NEO4J_dbms_memory_pagecache_size=1G
 
       # Default Database
-      - NEO4J_dbms_default__database=research
+      - NEO4J_initial_dbms_default__database=research
 
       # Query Logging
       - NEO4J_db_logs_query_enabled=INFO
@@ -25,13 +30,13 @@ services:
 
       # Transaction & Concurrency
       - NEO4J_dbms_transaction_timeout=300s
-      - NEO4J_dbms_transaction_concurrent_maximum=500
+      - NEO4J_db_transaction_concurrent_maximum=500
       - NEO4J_dbms_lock_acquisition_timeout=60s
 
       # Import/Bulk loading optimization
-      - NEO4J_dbms_tx__log_rotation_retention__policy=false
-      - NEO4J_dbms_checkpoint_interval_time=30s
-      - NEO4J_dbms_checkpoint_interval_tx=100000
+      - NEO4J_db_tx__log_rotation_retention__policy=false
+      - NEO4J_db_checkpoint_interval_time=30s
+      - NEO4J_db_checkpoint_interval_tx=100000
 
       # Security (Procedures for APOC & GDS)
       - NEO4J_dbms_security_procedures_unrestricted=gds.*,apoc.*

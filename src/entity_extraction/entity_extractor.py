@@ -1,4 +1,4 @@
-# src/phase1_extraction/entity_extractor.py
+# src/entity_extraction/entity_extractor.py
 """
 Entity Extraction and Cleaning for Wikipedia Data
 =================================================

@@ -1,4 +1,4 @@
-# src/phase1_extraction/connectivity_enhancer.py
+# src/entity_extraction/connectivity_enhancer.py
 """
 Fast-Track Connectivity Enhancement
 ==================================
@@ -13,7 +13,7 @@ import logging
 from pathlib import Path
 from typing import List, Set
 
-from src.phase1_extraction.wikipedia_client import WikipediaClient
+from src.entity_extraction.wikipedia_client import WikipediaClient
 
 
 class ConnectivityEnhancer:

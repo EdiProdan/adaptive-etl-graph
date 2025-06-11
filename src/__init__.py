@@ -1,4 +1,4 @@
-from .phase1_extraction import WikipediaClient
+from .entity_extraction import WikipediaClient
 
 __all__ = [
     "WikipediaClient"

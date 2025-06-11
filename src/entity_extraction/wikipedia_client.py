@@ -1,4 +1,4 @@
-# src/phase1_extraction/wikipedia_client.py
+# src/entity_extraction/wikipedia_client.py
 import sys
 
 import requests
